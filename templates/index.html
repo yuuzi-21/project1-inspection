@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>系统巡检面板</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <style>
+    body { font-family: "Microsoft YaHei", sans-serif; margin: 0; padding: 20px; background: #f6f8fb; }
+    h1 { font-size: 22px; color: #333; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .card { background: #fff; border-radius: 10px; padding: 14px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+    .card .name { font-size: 13px; color: #888; }
+    .card .value { font-size: 24px; font-weight: 700; margin-top: 6px; }
+    .card.ok .value { color: #2bbd8c; }
+    .card.bad .value { color: #e5484d; }
+    #chart { width: 100%; height: 380px; background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  </style>
+</head>
+<body>
+  <h1>系统巡检面板</h1>
+  <div class="cards" id="cards"></div>
+  <div id="chart"></div>
+
+  <script>
+    const chart = echarts.init(document.getElementById("chart"));
+
+    // 1) 状态卡片：拉最新数据渲染
+    async function loadLatest() {
+      const data = await (await fetch("/api/latest")).json();
+      const box = document.getElementById("cards");
+      box.innerHTML = data.items.map(it =>
+        `<div class="card ${it.status === "正常" || it.status === "通" ? "ok" : "bad"}">
+           <div class="name">${it.name}</div>
+           <div class="value">${it.value}</div>
+         </div>`).join("");
+    }
+
+    // 2) 趋势折线图：拉历史数据画三条线
+    async function loadHistory() {
+      const data = await (await fetch("/api/history")).json();
+      const names = ["CPU使用率", "内存使用率", "磁盘使用率"];
+      chart.setOption({
+        tooltip: { trigger: "axis" },
+        legend: { data: names },
+        xAxis: { type: "category", data: data["CPU使用率"].map(d => d.time) },
+        yAxis: { type: "value", axisLabel: { formatter: "{value}%" } },
+        series: names.map(name => ({
+          name: name,
+          type: "line",
+          smooth: true,
+          data: data[name].map(d => d.value)
+        }))
+      }, true);   // 第二个参数 true = 整体替换，避免旧点残留
+    }
+
+    async function refresh() {
+      await Promise.all([loadLatest(), loadHistory()]);
+    }
+
+    refresh();
+    setInterval(refresh, 5000);   // 每 5 秒自动刷新一次
+  </script>
+</body>
+</html>

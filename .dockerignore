@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+reports/
+*.log
+.git/
+.gitignore
+config.json            # ⭐ 真实配置不进镜像（含密码），运行时用挂载注入
+config.example.json
+Dockerfile
+.dockerignore
+README.md

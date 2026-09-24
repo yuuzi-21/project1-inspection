@@ -1,0 +1,10 @@
+{
+    "ping_targets": [
+        {"name": "网关(内网)", "host": "192.168.1.1"},
+        {"name": "公网IP", "host": "223.5.5.5"},
+        {"name": "公网域名", "host": "www.baidu.com"}
+    ],
+    "thresholds": {"cpu": 85, "memory": 85, "disk": 90},
+    "remote_hosts": [],
+    "webhook_url": ""
+}
